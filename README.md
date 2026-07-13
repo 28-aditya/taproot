@@ -15,7 +15,7 @@ A database, built from scratch in Go — no framework, no Postgres or SQLite und
 
 ## What this is
 
-I wanted to actually understand what a database is doing under the hood instead of just importing one, so I'm building one myself — from the raw TCP socket all the way down to bytes on disk. No frameworks handling the HTTP parsing, no existing database doing the storage, no ORM in between.
+I wanted to actually understand what a database is doing under the hood instead of just importing one, so I'm building one myself, from the raw TCP socket all the way down to bytes on disk. No frameworks handling the HTTP parsing, no existing database doing the storage, no ORM in between.
 
 The name's from the B-tree at the core of it — every lookup starts at the root node and works its way down, same idea as a taproot.
 
