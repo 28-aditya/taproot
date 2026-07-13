@@ -1,55 +1,73 @@
 <div align="center">
 
-<!-- TODO: drop your mascot/logo here, e.g. assets/mascot.png -->
-<img src="assets/logonbg.png" alt="Taproot mascot" width="180"><br>
+<img src="assets/logonbg.png" alt="Taproot logo" width="180">
 
-# 🌱 taproot
+# taproot
 
-**A database, built from the ground up. No framework, no external DB, no shortcuts.**
+A database, built from scratch in Go — no framework, no Postgres or SQLite underneath it, no ORM.
 
 ![Go](https://img.shields.io/badge/Go-00ADD8?style=flat-square&logo=go&logoColor=white)
 ![Status](https://img.shields.io/badge/status-in%20progress-yellow?style=flat-square)
-![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
 
 </div>
 
 ---
 
-## What is this?
+## What this is
 
-taproot is a relational database, written from scratch in Go — down to the socket.
+I wanted to actually understand what a database is doing under the hood instead of just importing one, so I'm building one myself — from the raw TCP socket all the way down to bytes on disk. No frameworks handling the HTTP parsing, no existing database doing the storage, no ORM in between.
 
-There's no framework parsing your HTTP requests, no Postgres or SQLite underneath, no ORM. Every layer between "a client sends a query" and "bytes land on disk" is code in this repo. The name comes from the B-tree at its core — every lookup starts at the root and grows down from there, same as a taproot anchors and feeds an entire tree.
+The name's from the B-tree at the core of it — every lookup starts at the root node and works its way down, same idea as a taproot.
 
 ```
 client
   │
   ▼
-your own HTTP server        (raw TCP sockets)
+my own HTTP server           (raw TCP sockets)
   │
   ▼
-your own SQL parser + executor   (tokenizer → AST → execution)
+my own SQL parser + executor  (tokenizer → AST → execution)
   │
   ▼
-your own B-tree storage engine   (insert / search / delete)
+my own B-tree storage engine  (insert / search / delete)
   │
   ▼
-disk file                   (persisted, survives a restart)
+disk file                    (persisted, survives a restart)
 ```
-
-The goal isn't to build something production-ready — it's to actually understand what a database *is*, by building one. As Feynman put it: what I cannot create, I do not understand.
 
 ---
 
-## Usage
+## How I'm building it
 
-Once it's running, it looks like this:
+Rough order, since each piece depends on the last one working:
+
+**1. HTTP server first.** Just a raw socket listener — accept a connection, read the bytes, parse out the method/path/headers, write a response back. No `net/http`, doing this by hand. Fastest way to get something real running, and it's the layer everything else eventually plugs into.
+
+**2. In-memory B+tree.** Insert, search, delete — no disk yet. Get the actual tree logic right before adding the complexity of persistence on top. Testing this by throwing a few thousand random keys at it and checking everything comes back sorted and correct.
+
+**3. Make it persistent.** Fixed-size pages written to a file, node splits creating new pages, parent pointers updated. The real test here: insert data, kill the process, start it again, data's still there.
+
+**4. SQL parser + executor.** Small subset to start — `CREATE TABLE`, `INSERT`, `SELECT ... WHERE`. Tokenize the query string, build a tree out of the tokens, walk that tree and call into the B-tree to actually do the work.
+
+**5. Wire it all together.** HTTP endpoint takes raw SQL, runs it through the parser, executes it against the storage engine, sends back the result as JSON. Also building a small CLI client so I'm not typing curl commands with escaped SQL strings the whole time.
+
+**6. Write-up.** Once it works, documenting why I made the calls I did (page size, B-tree vs B+tree, etc.) — that's most of the value for anyone (including future me) reading this later.
+
+---
+
+## Running it
 
 ```bash
-$ go run server.go &
-Server listening on :4221
+go run server.go
+```
 
-$ go run client.go
+in one terminal, then in another:
+
+```bash
+go run client.go
+```
+
+```
 taproot> CREATE TABLE users (id, name)
 OK
 
@@ -62,44 +80,15 @@ taproot> SELECT * FROM users
 +----+--------+
 | 1  | Aditya |
 +----+--------+
-
-taproot> exit
 ```
 
-Two terminals: one running the server, one running the interactive client shell.
-
 ---
 
-## Roadmap
+## Status
 
-- [ ] **HTTP server** — raw TCP listener, request parsing, routing, concurrent connections
-- [ ] **In-memory B+tree** — insert / search / delete, correctness before persistence
-- [ ] **Disk persistence** — fixed-size pages, node splits, survives a process restart
-- [ ] **SQL parser + executor** — tokenizer → AST → execution against the B+tree
-- [ ] **Wire it together** — HTTP endpoint runs SQL against the storage engine, plus an interactive CLI client
-- [ ] **Write-up** — architecture notes on *why*, not just *what*
-
----
-
-## Why Go
-
-Enough distance from Python/JS to be a genuinely new skill and a decent low-level-systems signal, without the borrow-checker tax of Rust or the memory-management tax of C eating the whole timeline. Zero non-standard-library dependencies.
-
----
-
-## Built with / learned from
-
-- [CodeCrafters](https://codecrafters.io) — "Build your own HTTP server" and "Build your own SQLite" challenge tracks
-- [*Build Your Own Database From Scratch in Go*](https://build-your-own.org/database/) — James Smith
-
-Read, understood, then implemented independently — not copy-pasted.
-
----
-
-## License
-
-MIT
-
-<div align="center">
-<sub>Every query starts at the root.</sub>
-</div>
+- [ ] HTTP server
+- [ ] In-memory B+tree
+- [ ] Disk persistence
+- [ ] SQL parser + executor
+- [ ] Everything wired together + CLI client
+- [ ] Write-up
