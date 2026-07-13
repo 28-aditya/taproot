@@ -83,7 +83,7 @@ Two terminals: one running the server, one running the interactive client shell.
 
 ## Why Go
 
-Enough distance from Python/JS to be a genuinely new skill and a decent low-level-systems signal, without the borrow-checker tax of Rust or the memory-management tax of C eating the whole timeline. Zero non-standard-library dependencies — that's deliberate, not an oversight.
+Enough distance from Python/JS to be a genuinely new skill and a decent low-level-systems signal, without the borrow-checker tax of Rust or the memory-management tax of C eating the whole timeline. Zero non-standard-library dependencies.
 
 ---
 
