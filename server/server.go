@@ -1,13 +1,20 @@
 package server
 
 import (
+	"bufio"
 	"fmt"
 	"log"
 	"net"
-	"time"
-	"bufio"
 	"strings"
+	"time"
 )
+
+type Request struct {
+    Method  string
+    Path    string
+    Version string
+    Headers map[string]string
+}
 
 func Start() {
 	ln, err := net.Listen("tcp", ":8080")
@@ -45,16 +52,15 @@ func handleConnection(conn net.Conn) {
 	headers := make(map[string]string)
 
 	requestLine, err := reader.ReadString('\n')
+	
+	if err != nil {
+		log.Printf("Failed to get HTTP path header")
+	}
 
 	parts := strings.Fields(requestLine)
 	method := parts[0]
 	path := parts[1]
 	version := parts[2]
-
-	if err != nil {
-		log.Printf("Failed to get HTTP path header")
-	}
-
 
 	for {
 		message, err := reader.ReadString('\n')
@@ -74,5 +80,19 @@ func handleConnection(conn net.Conn) {
 		if found {
 			headers[key] = value
 		}
+	}
+
+	req := Request{
+		Method: method,
+		Path: path,
+		Version: version,
+		Headers: headers,
+	}
+
+	log.Printf("\n=====================\nParsed request\nMethod=%v\nPath=%v\n=====================", req.Method, req.Path)
+
+	switch req.Path {
+	default:
+		conn.Write([]byte("HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nOK"))
 	}
 }
