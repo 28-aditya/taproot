@@ -1,3 +1,7 @@
 package main
 
-func main() {}
+import "taproot/server"
+
+func main() {
+	server.Start()
+}
