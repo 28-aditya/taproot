@@ -2,7 +2,7 @@ package storage
 
 import ("fmt")
 type Node struct {
-	Keys   []any
+	Keys   []int
 	IsLeaf bool
 	Pointers []*Node
 	// vars for the leaf nodes (data stored and next node to the right)
