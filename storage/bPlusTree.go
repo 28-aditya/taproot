@@ -18,17 +18,13 @@ func NewTree() *bPlusTree {
 	return &newTree
 }
 
-func (tree *bPlusTree) SearchTree(key int) (any, bool) {
-	curr := tree.rootNode
+func (tree *bPlusTree) findLeaf(key int) (*Node) {
+
+	curr:= tree.rootNode
 
 	for {
 		if curr.IsLeaf {
-			for i, k := range curr.Keys {
-				if k == key {
-					return curr.Values[i], true
-				}
-			}
-			return nil, false
+			return curr
 		}
 
 		childIndex := len(curr.Pointers) - 1
@@ -41,4 +37,19 @@ func (tree *bPlusTree) SearchTree(key int) (any, bool) {
 
 		curr = curr.Pointers[childIndex]
 	}
+}
+
+func (tree *bPlusTree) SearchTree(key int) (any, bool) {
+	
+	leaf := tree.findLeaf(key)
+
+	if leaf != nil {
+		for i,k := range leaf.Keys {
+			if k == key {
+				return leaf.Values[i], true
+			}
+		}
+	} 
+
+	return nil, false
 }
