@@ -1,6 +1,5 @@
 package storage
 
-import ("errors")
 const KEYCAPACITY = 4
 
 type bPlusTree struct {
@@ -21,14 +20,16 @@ func NewTree() *bPlusTree {
 	return &newTree
 }
 
-func (tree *bPlusTree) findLeaf(key int) *Node {
-
+func (tree *bPlusTree) findLeaf(key int) (*Node, []*Node) {
 	curr := tree.rootNode
+	var path []*Node
 
 	for {
 		if curr.IsLeaf {
-			return curr
+			return curr, path
 		}
+
+		path = append(path, curr)
 
 		childIndex := len(curr.Pointers) - 1
 		for i, k := range curr.Keys {
@@ -44,7 +45,7 @@ func (tree *bPlusTree) findLeaf(key int) *Node {
 
 func (tree *bPlusTree) SearchTree(key int) (any, bool) {
 
-	leaf := tree.findLeaf(key)
+	leaf, _:= tree.findLeaf(key)
 
 	if leaf != nil {
 		for i, k := range leaf.Keys {
@@ -58,10 +59,25 @@ func (tree *bPlusTree) SearchTree(key int) (any, bool) {
 }
 
 func (tree *bPlusTree) Insert(key int, value any) error {
-	leaf := tree.findLeaf(key)
+	leaf, path := tree.findLeaf(key)
 
 	if len(leaf.Keys) >= KEYCAPACITY {
-		return errors.New("KEY CAPACITY EXCEEDED")
+		newLeaf, startKey := tree.SplitLeaf(leaf)
+
+			if (len(path)==0) {
+				newRoot:=Node{
+					Keys:[]int{startKey},
+					Pointers: []*Node{leaf,newLeaf},
+					IsLeaf: false,
+				}
+				tree.setRoot(&newRoot)
+			}
+
+		if key>=startKey {
+			leaf = newLeaf
+			parentNode := path[len(path)-1]
+			parentNode.Pointers = append(parentNode.Pointers, leaf)
+		}
 	}
 
 	i := len(leaf.Keys)
@@ -76,5 +92,21 @@ func (tree *bPlusTree) Insert(key int, value any) error {
 	leaf.Keys 	= 	append(leaf.Keys[:i], append([]int{key}, leaf.Keys[i:]...)...)
 	leaf.Values = 	append(leaf.Values[:i], append([]any{value}, leaf.Values[i:]...)...)
 	return nil
+}
+
+
+func (tree *bPlusTree) SplitLeaf(leaf *Node) (*Node, int) {
+	mid := KEYCAPACITY/2
+	newLeaf := &Node{
+		IsLeaf: true,
+		Keys: leaf.Keys[mid:],
+		Values: leaf.Values[mid:],
+	}
+	leaf.Keys = leaf.Keys[:mid]
+	leaf.Values = leaf.Values[:mid]
 	
+	newLeaf.Next = leaf.Next
+	leaf.Next = newLeaf
+
+	return newLeaf,newLeaf.Keys[0]
 }
