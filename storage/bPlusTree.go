@@ -154,6 +154,20 @@ func (tree bPlusTree) RangeScan(lowerLimit int, upperLimit int) map[int]any {
 	return scan
 }
 
+func (tree bPlusTree) DeleteLeaf(key int) bool {
+	leaf, _ := tree.findLeaf(key)
+
+	for i, k := range leaf.Keys {
+		if k == key {
+			leaf.Keys = append(leaf.Keys[:i], leaf.Keys[i+1:]...)
+			leaf.Values = append(leaf.Values[:i], leaf.Values[i+1:]...)
+			return true
+		}
+	}
+
+	return false
+}
+
 // helper functions
 
 func sortedIntIndex(keys []int, key int) int {
