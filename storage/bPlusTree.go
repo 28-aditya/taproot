@@ -12,11 +12,7 @@ func (tree *bPlusTree) setRoot(root *Node) {
 
 func NewTree() *bPlusTree {
 	initialRoot := &Node{IsLeaf: true}
-
-	newTree := bPlusTree{
-		rootNode: initialRoot,
-	}
-
+	newTree := bPlusTree{rootNode: initialRoot}
 	return &newTree
 }
 
@@ -44,14 +40,11 @@ func (tree *bPlusTree) findLeaf(key int) (*Node, []*Node) {
 }
 
 func (tree *bPlusTree) SearchTree(key int) (any, bool) {
+	leaf, _ := tree.findLeaf(key)
 
-	leaf, _:= tree.findLeaf(key)
-
-	if leaf != nil {
-		for i, k := range leaf.Keys {
-			if k == key {
-				return leaf.Values[i], true
-			}
+	for i, k := range leaf.Keys {
+		if k == key {
+			return leaf.Values[i], true
 		}
 	}
 
@@ -61,52 +54,103 @@ func (tree *bPlusTree) SearchTree(key int) (any, bool) {
 func (tree *bPlusTree) Insert(key int, value any) error {
 	leaf, path := tree.findLeaf(key)
 
-	if len(leaf.Keys) >= KEYCAPACITY {
-		newLeaf, startKey := tree.SplitLeaf(leaf)
+	i := sortedIntIndex(leaf.Keys, key)
+	leaf.Keys = insertInt(leaf.Keys, i, key)
+	leaf.Values = insertAny(leaf.Values, i, value)
 
-			if (len(path)==0) {
-				newRoot:=Node{
-					Keys:[]int{startKey},
-					Pointers: []*Node{leaf,newLeaf},
-					IsLeaf: false,
-				}
-				tree.setRoot(&newRoot)
-			}
+	if len(leaf.Keys) > KEYCAPACITY {
+		newLeaf, promotedKey := tree.splitLeaf(leaf)
+		tree.insertIntoParent(path, leaf, promotedKey, newLeaf)
+	}
 
-		if key>=startKey {
-			leaf = newLeaf
-			parentNode := path[len(path)-1]
-			parentNode.Pointers = append(parentNode.Pointers, leaf)
+	return nil
+}
+
+func (tree *bPlusTree) splitLeaf(leaf *Node) (*Node, int) {
+	mid := len(leaf.Keys) / 2
+
+	newLeaf := &Node{
+		IsLeaf: true,
+		Keys:   append([]int{}, leaf.Keys[mid:]...),
+		Values: append([]any{}, leaf.Values[mid:]...),
+	}
+
+	leaf.Keys = leaf.Keys[:mid]
+	leaf.Values = leaf.Values[:mid]
+
+	newLeaf.Next = leaf.Next
+	leaf.Next = newLeaf
+
+	return newLeaf, newLeaf.Keys[0]
+}
+
+func (tree *bPlusTree) splitInternal(node *Node) (*Node, int) {
+	mid := len(node.Keys) / 2
+	promotedKey := node.Keys[mid]
+
+	newNode := &Node{
+		IsLeaf:   false,
+		Keys:     append([]int{}, node.Keys[mid+1:]...),
+		Pointers: append([]*Node{}, node.Pointers[mid+1:]...),
+	}
+
+	node.Keys = node.Keys[:mid]
+	node.Pointers = node.Pointers[:mid+1]
+
+	return newNode, promotedKey
+}
+
+func (tree *bPlusTree) insertIntoParent(path []*Node, left *Node, key int, right *Node) {
+	if len(path) == 0 {
+		newRoot := &Node{
+			IsLeaf:   false,
+			Keys:     []int{key},
+			Pointers: []*Node{left, right},
+		}
+		tree.setRoot(newRoot)
+		return
+	}
+
+	parent := path[len(path)-1]
+
+	idx := 0
+	for i, p := range parent.Pointers {
+		if p == left {
+			idx = i
+			break
 		}
 	}
 
-	i := len(leaf.Keys)
+	parent.Keys = insertInt(parent.Keys, idx, key)
+	parent.Pointers = insertNode(parent.Pointers, idx+1, right)
 
-	for j, k := range leaf.Keys {
+	if len(parent.Keys) > KEYCAPACITY {
+		newParent, promotedKey := tree.splitInternal(parent)
+		tree.insertIntoParent(path[:len(path)-1], parent, promotedKey, newParent)
+	}
+}
+
+// helper functions
+
+func sortedIntIndex(keys []int, key int) int {
+	i := len(keys)
+	for j, k := range keys {
 		if k > key {
 			i = j
 			break
 		}
 	}
-	
-	leaf.Keys 	= 	append(leaf.Keys[:i], append([]int{key}, leaf.Keys[i:]...)...)
-	leaf.Values = 	append(leaf.Values[:i], append([]any{value}, leaf.Values[i:]...)...)
-	return nil
+	return i
 }
 
+func insertInt(s []int, i int, v int) []int {
+	return append(s[:i], append([]int{v}, s[i:]...)...)
+}
 
-func (tree *bPlusTree) SplitLeaf(leaf *Node) (*Node, int) {
-	mid := KEYCAPACITY/2
-	newLeaf := &Node{
-		IsLeaf: true,
-		Keys: leaf.Keys[mid:],
-		Values: leaf.Values[mid:],
-	}
-	leaf.Keys = leaf.Keys[:mid]
-	leaf.Values = leaf.Values[:mid]
-	
-	newLeaf.Next = leaf.Next
-	leaf.Next = newLeaf
+func insertAny(s []any, i int, v any) []any {
+	return append(s[:i], append([]any{v}, s[i:]...)...)
+}
 
-	return newLeaf,newLeaf.Keys[0]
+func insertNode(s []*Node, i int, v *Node) []*Node {
+	return append(s[:i], append([]*Node{v}, s[i:]...)...)
 }
