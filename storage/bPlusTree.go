@@ -130,6 +130,30 @@ func (tree *bPlusTree) insertIntoParent(path []*Node, left *Node, key int, right
 	}
 }
 
+func (tree bPlusTree) RangeScan(lowerLimit int, upperLimit int) map[int]any {
+	scan := map[int]any{}
+	leaf, _ := tree.findLeaf(lowerLimit)
+
+	for leaf != nil {
+		done := false
+		for i, k := range leaf.Keys {
+			if k > upperLimit {
+				done = true
+				break
+			}
+			if k >= lowerLimit {
+				scan[k] = leaf.Values[i]
+			}
+		}
+		if done {
+			break
+		}
+		leaf = leaf.Next
+	}
+
+	return scan
+}
+
 // helper functions
 
 func sortedIntIndex(keys []int, key int) int {
