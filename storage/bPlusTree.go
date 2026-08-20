@@ -11,7 +11,7 @@ func (tree *bPlusTree) setRoot(root *Node) {
 }
 
 func NewTree() *bPlusTree {
-	initialRoot := &Node{IsLeaf: true}
+	initialRoot := &Node{IsLeaf: true, dirty: true}
 	newTree := bPlusTree{rootNode: initialRoot}
 	return &newTree
 }
@@ -57,6 +57,7 @@ func (tree *bPlusTree) Insert(key int, value any) error {
 	i := sortedIntIndex(leaf.Keys, key)
 	leaf.Keys = insertInt(leaf.Keys, i, key)
 	leaf.Values = insertAny(leaf.Values, i, value)
+	leaf.dirty = true
 
 	if len(leaf.Keys) > KEYCAPACITY {
 		newLeaf, promotedKey := tree.splitLeaf(leaf)
@@ -73,6 +74,7 @@ func (tree *bPlusTree) splitLeaf(leaf *Node) (*Node, int) {
 		IsLeaf: true,
 		Keys:   append([]int{}, leaf.Keys[mid:]...),
 		Values: append([]any{}, leaf.Values[mid:]...),
+		dirty:  true,
 	}
 
 	leaf.Keys = leaf.Keys[:mid]
@@ -80,6 +82,7 @@ func (tree *bPlusTree) splitLeaf(leaf *Node) (*Node, int) {
 
 	newLeaf.Next = leaf.Next
 	leaf.Next = newLeaf
+	leaf.dirty = true
 
 	return newLeaf, newLeaf.Keys[0]
 }
@@ -92,10 +95,12 @@ func (tree *bPlusTree) splitInternal(node *Node) (*Node, int) {
 		IsLeaf:   false,
 		Keys:     append([]int{}, node.Keys[mid+1:]...),
 		Pointers: append([]*Node{}, node.Pointers[mid+1:]...),
+		dirty:    true,
 	}
 
 	node.Keys = node.Keys[:mid]
 	node.Pointers = node.Pointers[:mid+1]
+	node.dirty = true
 
 	return newNode, promotedKey
 }
@@ -106,6 +111,7 @@ func (tree *bPlusTree) insertIntoParent(path []*Node, left *Node, key int, right
 			IsLeaf:   false,
 			Keys:     []int{key},
 			Pointers: []*Node{left, right},
+			dirty:    true,
 		}
 		tree.setRoot(newRoot)
 		return
@@ -123,6 +129,7 @@ func (tree *bPlusTree) insertIntoParent(path []*Node, left *Node, key int, right
 
 	parent.Keys = insertInt(parent.Keys, idx, key)
 	parent.Pointers = insertNode(parent.Pointers, idx+1, right)
+	parent.dirty = true
 
 	if len(parent.Keys) > KEYCAPACITY {
 		newParent, promotedKey := tree.splitInternal(parent)
@@ -161,6 +168,7 @@ func (tree bPlusTree) DeleteLeaf(key int) bool {
 		if k == key {
 			leaf.Keys = append(leaf.Keys[:i], leaf.Keys[i+1:]...)
 			leaf.Values = append(leaf.Values[:i], leaf.Values[i+1:]...)
+			leaf.dirty = true
 			return true
 		}
 	}
