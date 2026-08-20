@@ -12,10 +12,11 @@ const (
 	pageSize     = 4096
 	magicNumber  = 0x54415052 // "TAPR"
 	headerPageID = 0
-	nilPageID    = 0 
+	nilPageID    = 0 // 0 is reserved for the header page, so it doubles as "no page"
 )
 
 func init() {
+
 	gob.Register(int(0))
 	gob.Register(int64(0))
 	gob.Register(float64(0))
@@ -23,6 +24,7 @@ func init() {
 	gob.Register(bool(false))
 	gob.Register([]byte(nil))
 }
+
 
 type fileHeader struct {
 	Magic        uint32
@@ -220,18 +222,12 @@ func (p *Pager) ReadNode(id uint32) (node *Node, childIDs []uint32, nextID uint3
 }
 
 func SaveTree(tree *bPlusTree, path string) error {
-	file, err := os.Create(path)
+	pager, err := OpenPager(path)
 	if err != nil {
-		return fmt.Errorf("create database file: %w", err)
+		return err
 	}
 
-	pager := &Pager{
-		file:   file,
-		header: fileHeader{Magic: magicNumber, NumPages: 1},
-	}
-
-	visited := make(map[*Node]uint32)
-	rootID, err := pager.saveNodeRec(tree.rootNode, visited)
+	rootID, err := pager.saveNodeRec(tree.rootNode)
 	if err != nil {
 		pager.file.Close()
 		return err
@@ -241,32 +237,38 @@ func SaveTree(tree *bPlusTree, path string) error {
 	return pager.Close()
 }
 
-func (p *Pager) saveNodeRec(node *Node, visited map[*Node]uint32) (uint32, error) {
+func (p *Pager) saveNodeRec(node *Node) (uint32, error) {
 	if node == nil {
 		return nilPageID, nil
 	}
-	if id, ok := visited[node]; ok {
-		return id, nil
+
+	if !node.dirty && node.pageID != nilPageID {
+		return node.pageID, nil
 	}
 
-	id, err := p.AllocatePage()
-	if err != nil {
-		return 0, err
+	id := node.pageID
+	if id == nilPageID {
+		var err error
+		id, err = p.AllocatePage()
+		if err != nil {
+			return 0, err
+		}
+		node.pageID = id
 	}
-	visited[node] = id 
 
 	var childIDs []uint32
 	var nextID uint32
+	var err error
 
 	if node.IsLeaf {
-		nextID, err = p.saveNodeRec(node.Next, visited)
+		nextID, err = p.saveNodeRec(node.Next)
 		if err != nil {
 			return 0, err
 		}
 	} else {
 		childIDs = make([]uint32, len(node.Pointers))
 		for i, child := range node.Pointers {
-			childIDs[i], err = p.saveNodeRec(child, visited)
+			childIDs[i], err = p.saveNodeRec(child)
 			if err != nil {
 				return 0, err
 			}
@@ -276,6 +278,8 @@ func (p *Pager) saveNodeRec(node *Node, visited map[*Node]uint32) (uint32, error
 	if err := p.WriteNode(id, node, childIDs, nextID); err != nil {
 		return 0, err
 	}
+	node.dirty = false
+
 	return id, nil
 }
 
@@ -311,6 +315,7 @@ func (p *Pager) loadNodeRec(id uint32, loaded map[uint32]*Node) (*Node, error) {
 	if err != nil {
 		return nil, err
 	}
+	node.pageID = id
 	loaded[id] = node // reserve before recursing in case of shared references
 
 	if node.IsLeaf {
