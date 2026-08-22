@@ -16,15 +16,14 @@ const (
 )
 
 func init() {
-
 	gob.Register(int(0))
 	gob.Register(int64(0))
 	gob.Register(float64(0))
 	gob.Register(string(""))
 	gob.Register(bool(false))
 	gob.Register([]byte(nil))
+	gob.Register(map[string]any(nil))
 }
-
 
 type fileHeader struct {
 	Magic        uint32
