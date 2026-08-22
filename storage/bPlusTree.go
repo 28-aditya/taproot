@@ -6,6 +6,8 @@ type bPlusTree struct {
 	rootNode *Node
 }
 
+type Tree = bPlusTree
+
 func (tree *bPlusTree) setRoot(root *Node) {
 	tree.rootNode = root
 }
