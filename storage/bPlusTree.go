@@ -3,13 +3,22 @@ package storage
 const KEYCAPACITY = 4
 
 type bPlusTree struct {
-	rootNode *Node
+	rootNode   *Node
+	nextPageID uint32
 }
 
 type Tree = bPlusTree
 
 func (tree *bPlusTree) setRoot(root *Node) {
 	tree.rootNode = root
+}
+
+func (tree *bPlusTree) assignPageID(n *Node) uint32 {
+	if n.pageID == 0 {
+		tree.nextPageID++
+		n.pageID = tree.nextPageID
+	}
+	return n.pageID
 }
 
 func NewTree() *bPlusTree {

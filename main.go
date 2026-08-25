@@ -5,5 +5,6 @@ import ("taproot/server"
 )
 
 func main() {
+	storage.Check()
 	server.Start()
 }
