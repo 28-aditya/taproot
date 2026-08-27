@@ -39,7 +39,7 @@ from rich.markup import escape
 from rich.panel import Panel
 from rich.table import Table
 
-# SQL syntax highlighting
+# SQL syntax highlighting 
 
 KEYWORDS = {
     "SELECT", "FROM", "WHERE",
@@ -186,7 +186,7 @@ def split_statements(text):
     return statements
 
 # Output rendering
-
+#
 def format_value(v):
     if v is None:
         return "[dim italic]NULL[/dim italic]"
@@ -328,10 +328,11 @@ def run_interactive(client, console):
         buffer += line + "\n"
 
         if statement_is_complete(buffer):
-            stmt = buffer.strip()
+            stmts = split_statements(buffer)
             buffer = ""
-            if stmt and stmt != ";":
-                execute_and_render(client, console, stmt)
+            for stmt in stmts:
+                if stmt and stmt != ";":
+                    execute_and_render(client, console, stmt)
 
     console.print("[dim]bye[/dim]")
 
