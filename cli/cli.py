@@ -39,9 +39,7 @@ from rich.markup import escape
 from rich.panel import Panel
 from rich.table import Table
 
-# --------------------------------------------------------------------------
-# SQL syntax highlighting (mirrors the keyword set in sql/tokenizer.go)
-# --------------------------------------------------------------------------
+# SQL syntax highlighting
 
 KEYWORDS = {
     "SELECT", "FROM", "WHERE",
@@ -111,10 +109,7 @@ class SQLLexer(Lexer):
 
         return get_line
 
-
-# --------------------------------------------------------------------------
 # Server client
-# --------------------------------------------------------------------------
 
 class TaprootError(Exception):
     pass
@@ -153,11 +148,7 @@ class TaprootClient:
         except ValueError as e:
             raise TaprootError(f"server returned a non-JSON response: {resp.text[:200]!r}") from e
 
-
-# --------------------------------------------------------------------------
-# Statement buffering (need to know when a multi-line statement is "done",
-# without cutting a ';' inside a string literal)
-# --------------------------------------------------------------------------
+# Statement buffering
 
 def statement_is_complete(buffer):
     text = buffer.rstrip()
@@ -194,10 +185,7 @@ def split_statements(text):
         statements.append(tail)
     return statements
 
-
-# --------------------------------------------------------------------------
 # Output rendering
-# --------------------------------------------------------------------------
 
 def format_value(v):
     if v is None:
@@ -253,10 +241,7 @@ def execute_and_render(client, console, stmt):
     elapsed = time.monotonic() - start
     render_result(console, result, elapsed)
 
-
-# --------------------------------------------------------------------------
 # Meta-commands
-# --------------------------------------------------------------------------
 
 META_HELP = """\
 [bold]Meta-commands[/bold]
@@ -300,10 +285,7 @@ def handle_meta_command(line, client, console):
     console.print(f"[red]unknown meta-command:[/red] {escape(cmd)} (try .help)")
     return False
 
-
-# --------------------------------------------------------------------------
 # Interactive REPL
-# --------------------------------------------------------------------------
 
 def print_banner(console, client):
     console.print(Panel.fit(
@@ -372,10 +354,7 @@ def run_batch(client, console):
 
     return exit_code
 
-
-# --------------------------------------------------------------------------
 # Entry point
-# --------------------------------------------------------------------------
 
 def main():
     parser = argparse.ArgumentParser(description="Interactive SQL shell for taproot")
