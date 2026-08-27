@@ -22,9 +22,9 @@ The goal is to understand **how a database actually works underneath the abstrac
 
 ---
 
-
 <div align="center">
 <img src="assets/preview.gif" alt="preview" width="1000">
+</div>
 
 ## ✨ Why Taproot?
 
@@ -48,36 +48,36 @@ Taproot intentionally removes most of those layers.
 
 ```text
 Python CLI
-     │
-     │ HTTP
-     ▼
+    │
+    │ HTTP
+    ▼
 Raw TCP HTTP Server
-     │
-     ▼
+    │
+    ▼
 SQL Tokenizer
-     │
-     ▼
+    │
+    ▼
 SQL Parser
-     │
-     ▼
+    │
+    ▼
 AST
-     │
-     ▼
+    │
+    ▼
 SQL Executor
-     │
-     ▼
+    │
+    ▼
 Catalog
-     │
-     ▼
+    │
+    ▼
 B+ Tree
-     │
-     ▼
+    │
+    ▼
 Pager
-     │
-     ▼
+    │
+    ▼
 Database Files
-     │
-     ▼
+    │
+    ▼
 Disk
 ```
 
@@ -87,44 +87,44 @@ This makes Taproot useful as a **database-engineering project, educational resou
 
 # 🚀 Features
 
-| Feature                                | Status            |
-| -------------------------------------- | ----------------- |
-| Raw TCP HTTP server                    | ✅ Implemented     |
-| HTTP request parsing                   | ✅ Implemented     |
-| HTTP JSON responses                    | ✅ Implemented     |
-| SQL tokenizer                          | ✅ Implemented     |
-| SQL parser                             | ✅ Implemented     |
-| SQL AST                                | ✅ Implemented     |
-| `CREATE TABLE`                         | ✅ Implemented     |
-| `DROP TABLE`                           | ✅ Implemented     |
-| `SHOW TABLES`                          | ✅ Implemented     |
-| `DESC` / `DESCRIBE`                    | ✅ Implemented     |
-| `INSERT`                               | ✅ Implemented     |
-| `SELECT`                               | ✅ Implemented     |
-| `UPDATE`                               | ✅ Implemented     |
-| `DELETE`                               | ✅ Implemented     |
-| `WHERE` expressions                    | ✅ Implemented     |
-| `AND` / `OR`                           | ✅ Implemented     |
-| B+ tree insertion                      | ✅ Implemented     |
-| B+ tree search                         | ✅ Implemented     |
-| B+ tree range scanning                 | ✅ Implemented     |
-| B+ tree deletion                       | ✅ Implemented     |
-| Leaf splitting                         | ✅ Implemented     |
-| Internal-node splitting                | ✅ Implemented     |
-| Persistent storage                     | ✅ Implemented     |
-| Page allocation/free-list              | ✅ Implemented     |
-| Database catalog persistence           | ✅ Implemented     |
-| Python interactive CLI                 | ✅ Implemented     |
-| CLI batch mode                         | ✅ Implemented     |
-| Multi-line SQL in CLI                  | ✅ Implemented     |
-| SQL syntax highlighting                | ✅ Implemented     |
-| Joins                                  | ❌ Not implemented |
-| Transactions                           | ❌ Not implemented |
-| Indexes other than primary-key storage | ❌ Not implemented |
-| Authentication                         | ❌ Not implemented |
-| TLS/HTTPS                              | ❌ Not implemented |
-| Query optimizer                        | ❌ Not implemented |
-| Aggregations                           | ❌ Not implemented |
+| Feature                                | Status             |
+| --------------------------------------- | ------------------ |
+| Raw TCP HTTP server                    | ✅ Implemented      |
+| HTTP request parsing                   | ✅ Implemented      |
+| HTTP JSON responses                    | ✅ Implemented      |
+| SQL tokenizer                          | ✅ Implemented      |
+| SQL parser                             | ✅ Implemented      |
+| SQL AST                                | ✅ Implemented      |
+| `CREATE TABLE`                         | ✅ Implemented      |
+| `DROP TABLE`                           | ✅ Implemented      |
+| `SHOW TABLES`                          | ✅ Implemented      |
+| `DESC` / `DESCRIBE`                    | ✅ Implemented      |
+| `INSERT`                               | ✅ Implemented      |
+| `SELECT`                               | ✅ Implemented      |
+| `UPDATE`                               | ✅ Implemented      |
+| `DELETE`                               | ✅ Implemented      |
+| `WHERE` expressions                    | ✅ Implemented      |
+| `AND` / `OR`                           | ✅ Implemented      |
+| B+ tree insertion                      | ✅ Implemented      |
+| B+ tree search                         | ✅ Implemented      |
+| B+ tree range scanning                 | ✅ Implemented      |
+| B+ tree deletion                       | ✅ Implemented      |
+| Leaf splitting                         | ✅ Implemented      |
+| Internal-node splitting                | ✅ Implemented      |
+| Persistent storage                     | ✅ Implemented      |
+| Page allocation/free-list              | ✅ Implemented      |
+| Database catalog persistence           | ✅ Implemented      |
+| Python interactive CLI                 | ✅ Implemented      |
+| CLI batch mode                         | ✅ Implemented      |
+| Multi-line SQL in CLI                  | ✅ Implemented      |
+| SQL syntax highlighting                | ✅ Implemented      |
+| Joins                                  | ❌ Not implemented  |
+| Transactions                           | ❌ Not implemented  |
+| Indexes other than primary-key storage | ❌ Not implemented  |
+| Authentication                         | ❌ Not implemented  |
+| TLS/HTTPS                              | ❌ Not implemented  |
+| Query optimizer                        | ❌ Not implemented  |
+| Aggregations                           | ❌ Not implemented  |
 
 ---
 
@@ -133,44 +133,44 @@ This makes Taproot useful as a **database-engineering project, educational resou
 Taproot is split into several relatively independent layers.
 
 ```text
-┌───────────────────────────────────────┐
-│            Python CLI                 │
-│  Interactive shell / Batch execution  │
-└───────────────────┬───────────────────┘
-                    │ HTTP
-                    ▼
-┌───────────────────────────────────────┐
-│             HTTP Server               │
-│      Raw TCP socket implementation     │
-└───────────────────┬───────────────────┘
-                    │ SQL
-                    ▼
-┌───────────────────────────────────────┐
-│            SQL Layer                  │
-│                                       │
-│ Tokenizer → Parser → AST → Executor   │
-└───────────────────┬───────────────────┘
-                    │
-                    ▼
-┌───────────────────────────────────────┐
-│              Catalog                  │
-│      Schemas + table metadata         │
-└───────────────────┬───────────────────┘
-                    │
-                    ▼
-┌───────────────────────────────────────┐
-│          B+ Tree Storage              │
-│       Search / Insert / Delete        │
-└───────────────────┬───────────────────┘
-                    │
-                    ▼
-┌───────────────────────────────────────┐
-│               Pager                   │
-│   4096-byte pages + gob serialization │
-└───────────────────┬───────────────────┘
-                    │
-                    ▼
-                 Disk
+┌────────────────────────────────────────┐
+│              Python CLI                 │
+│   Interactive shell / Batch execution   │
+└────────────────────┬────────────────────┘
+                      │ HTTP
+                      ▼
+┌────────────────────────────────────────┐
+│              HTTP Server                │
+│      Raw TCP socket implementation      │
+└────────────────────┬────────────────────┘
+                      │ SQL
+                      ▼
+┌────────────────────────────────────────┐
+│               SQL Layer                 │
+│                                          │
+│  Tokenizer → Parser → AST → Executor    │
+└────────────────────┬────────────────────┘
+                      │
+                      ▼
+┌────────────────────────────────────────┐
+│                Catalog                  │
+│       Schemas + table metadata          │
+└────────────────────┬────────────────────┘
+                      │
+                      ▼
+┌────────────────────────────────────────┐
+│            B+ Tree Storage              │
+│        Search / Insert / Delete         │
+└────────────────────┬────────────────────┘
+                      │
+                      ▼
+┌────────────────────────────────────────┐
+│                 Pager                   │
+│    4096-byte pages + gob serialization  │
+└────────────────────┬────────────────────┘
+                      │
+                      ▼
+                    Disk
 ```
 
 ---
@@ -329,7 +329,7 @@ SELECT * FROM users;
 Example result:
 
 ```text
-id | name | age
+id | name   | age
 1  | Aditya | 21
 2  | Alice  | 24
 3  | Bob    | 19
@@ -380,12 +380,12 @@ CREATE TABLE users (
 
 ### Supported column types
 
-| Type    | Aliases             | Stored value |
-| ------- | ------------------- | ------------ |
-| `INT`   | `INTEGER`           | Integer      |
-| `TEXT`  | `STRING`, `VARCHAR` | String       |
-| `FLOAT` | `REAL`, `DOUBLE`    | Float64      |
-| `BOOL`  | `BOOLEAN`           | Boolean      |
+| Type    | Aliases              | Stored value |
+| ------- | --------------------- | ------------ |
+| `INT`   | `INTEGER`              | Integer      |
+| `TEXT`  | `STRING`, `VARCHAR`    | String       |
+| `FLOAT` | `REAL`, `DOUBLE`       | Float64      |
+| `BOOL`  | `BOOLEAN`              | Boolean      |
 
 Example:
 
@@ -748,7 +748,7 @@ or:
 
 ---
 
-# 2. Parser
+## 2. Parser
 
 `sql/parser.go`
 
@@ -790,7 +790,7 @@ be represented structurally rather than evaluated directly from strings.
 
 ---
 
-# 3. AST
+## 3. AST
 
 `sql/ast.go`
 
@@ -819,7 +819,7 @@ This separation makes it possible to parse SQL independently from execution.
 
 ---
 
-# 4. Executor
+## 4. Executor
 
 `sql/executor.go`
 
@@ -931,7 +931,7 @@ Conceptually:
            /     |     \
        [1..9] [10..19] [20..]
           ↓       ↓       ↓
-        leaf → leaf → leaf
+        leaf    leaf    leaf
 ```
 
 Leaf nodes contain:
@@ -1483,18 +1483,18 @@ python cli/cli.py --host db.local --port 9090
 
 The interactive shell provides commands that begin with `.`.
 
-| Command             | Description           |
-| ------------------- | --------------------- |
-| `.help`             | Show CLI help         |
-| `.h`                | Alias for `.help`     |
-| `.tables`           | List tables           |
-| `.describe <table>` | Display table schema  |
-| `.desc <table>`     | Alias for `.describe` |
-| `.clear`            | Clear the terminal    |
-| `.cls`              | Alias for `.clear`    |
-| `.exit`             | Exit the shell        |
-| `.quit`             | Exit the shell        |
-| `.q`                | Exit the shell        |
+| Command             | Description            |
+| ------------------- | ----------------------- |
+| `.help`             | Show CLI help            |
+| `.h`                | Alias for `.help`        |
+| `.tables`           | List tables              |
+| `.describe <table>` | Display table schema     |
+| `.desc <table>`     | Alias for `.describe`    |
+| `.clear`            | Clear the terminal       |
+| `.cls`              | Alias for `.clear`       |
+| `.exit`             | Exit the shell           |
+| `.quit`             | Exit the shell           |
+| `.q`                | Exit the shell           |
 
 Example:
 
@@ -2054,7 +2054,7 @@ Serializes a Go value as JSON and writes an HTTP response.
 
 ---
 
-# SQL
+## SQL
 
 ### `Tokenize`
 
@@ -2099,17 +2099,17 @@ Maps SQL type names and aliases to Taproot's internal `ColumnType`.
 Supported mappings:
 
 ```text
-INT / INTEGER       → TypeInt
+INT / INTEGER        → TypeInt
 TEXT / STRING / VARCHAR
-                    → TypeText
+                     → TypeText
 FLOAT / REAL / DOUBLE
-                    → TypeFloat
-BOOL / BOOLEAN      → TypeBool
+                     → TypeFloat
+BOOL / BOOLEAN       → TypeBool
 ```
 
 ---
 
-# 📦 Storage
+## Storage
 
 ### `NewTree`
 
@@ -2157,7 +2157,7 @@ Recursively persists a B+ tree.
 
 ---
 
-# 🗃️ Catalog
+## Catalog
 
 ### `OpenCatalog`
 
