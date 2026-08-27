@@ -1,10 +1,7 @@
 package main
 
-import ("taproot/server"
-		"taproot/storage"
-)
+import "taproot/server"
 
 func main() {
-	storage.Check()
 	server.Start()
 }
